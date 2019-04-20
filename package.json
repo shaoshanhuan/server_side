@@ -11,6 +11,7 @@
   "dependencies": {
     "express": "^4.16.4",
     "express-session": "^1.16.1",
-    "formidable": "^1.2.1"
+    "formidable": "^1.2.1",
+    "gm": "^1.23.1"
   }
 }

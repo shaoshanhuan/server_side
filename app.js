@@ -3,6 +3,9 @@ const session = require('express-session');
 const formidable = require("formidable");
 const fs = require("fs");
 const crypto = require("crypto");
+const gm = require('gm');
+const path = require("path");
+const url = require("url");
 const app = express();
 
 // 开静态
@@ -72,6 +75,43 @@ app.get("/me",(req,res)=>{
 		res.json({"err" : -4});
 	}
 });
+
+// 上传
+app.post("/uploadavatar",(req,res)=>{
+	var form = new formidable.IncomingForm();
+	// 设置上传目录
+	form.uploadDir = "./uploads"
+	// 保留扩展名
+	form.keepExtensions = true;
+
+	form.parse(req,(err,fields,files)=>{
+		 
+		if(files.file.type != "image/jpeg" && files.file.type != "image/png"){
+			// 图片类型不对
+			res.json({"result":-3});
+		}else if(files.file.size > 200 * 1024){
+			// 图片文件体积不能超过200kb
+			res.json({"result":-2});
+		}else{
+			// 文件的宽度和高度尺寸
+			gm(path.resolve(__dirname , files.file.path)).size((err , size)=>{
+				if(size.width >= 100 && size.width <= 1500 && size.height >= 100 && size.height <= 1500){
+					// 成功了，向前端回调文件尺寸、宽度和高度、文件名
+					res.json({
+						"result":1,
+						"width":size.width,
+						"height":size.height,
+						"filename":path.basename(files.file.path)		// 只给前端文件名即可，路径不用给
+					});
+				}else{
+					// 图片的宽度和高度不在范围内
+					res.json({"result":-4});
+				}
+			});
+			
+		}
+	});
+})
 
 
 app.listen(3000);
