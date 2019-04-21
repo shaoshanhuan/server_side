@@ -111,7 +111,52 @@ app.post("/uploadavatar",(req,res)=>{
 			
 		}
 	});
-})
+});
+
+// 裁图接口
+app.post("/cutavatarandsetavatar",(req,res)=>{
+	// 收到前端发来的6个参数
+	var form = new formidable.IncomingForm();
+	form.parse(req,(err,fields,files)=>{
+		// 切片宽度、高度是相同的
+		const cW = Number(fields.cW);
+		// 切片的左上角x位置
+		const dX = Number(fields.dX);
+		// 切片的左上角y位置
+		const dY = Number(fields.dY);
+		// 原图宽度
+		const picRealWidth = Number(fields.picRealWidth);
+		// 显示的图片宽度
+		const picShowWidth = Number(fields.picShowWidth);
+		// 图片的文件名
+		const filename = fields.filename;
+
+		// 计算比例
+		const rate = picRealWidth / picShowWidth;
+
+		// 裁切
+		gm(path.resolve(__dirname , "uploads/" + filename))
+		.crop(cW * rate, cW * rate, dX * rate, dY * rate)
+		.resize(100, 100, '!')
+		.write(path.resolve(__dirname , "uploads/" + filename), function (err) {
+			// 写数据库
+			// 使用fs模块读取小数据库，依次比对，看看他是谁
+			fs.readFile("./db/users.txt",(err,content)=>{
+				var arr = JSON.parse(content.toString());
+				// 依次比对
+				for(let i = 0 ; i < arr.length ; i++){
+					if(arr[i].username == req.session.username){
+						// 更改这项的avatar
+						arr[i].avatar = "uploads/" + filename;
+					}
+				}
+				fs.writeFile("./db/users.txt",JSON.stringify(arr),function(){
+					res.json({"result" : 1});
+				});
+			});
+		});
+	});
+});
 
 
 app.listen(3000);
