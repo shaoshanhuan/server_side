@@ -51,7 +51,6 @@ app.post("/login",(req,res)=>{
 	});
 });
 
-
 // 查询当前登录的人的信息
 app.get("/me",(req,res)=>{
 	// 先看他有没有session
@@ -195,5 +194,45 @@ app.get("/profile/:username",(req,res)=>{
 	}
 });
 
+// 更改某人资料
+app.post("/profile/:username",(req,res)=>{
+	// 通过formidable得到你提交上来的参数
+	var form = new formidable.IncomingForm();
+	form.parse(req,(err,fields,files)=>{
+		// 查询数据库，查更多这个人的信息
+		fs.readFile("./db/users.txt",(err,content)=>{
+			var arr = JSON.parse(content.toString());
+			for(let i = 0 ; i < arr.length ; i++){
+				if(arr[i].username == req.params.username){
+					// 改变这个对象
+					arr[i] = Object.assign(arr[i] , fields);
+				}
+			}
+
+			fs.writeFile("./db/users.txt",JSON.stringify(arr),function(){
+				res.json({"result" : 1});
+			});
+		});
+	});
+});
+
+// 检查昵称是否有重复的
+app.get("/checknickname",(req,res)=>{
+	// 得到GET请求参数，好比PHP中的$_GET["nickname"];
+	var nickname = url.parse(req.url,true).query.nickname;
+	var username = url.parse(req.url,true).query.username;
+	console.log(nickname);
+	// 读取数据库，看看有没有nickname一样的
+	fs.readFile("./db/users.txt",(err,content)=>{
+		var arr = JSON.parse(content.toString());
+		for(let i = 0 ; i < arr.length ; i++){
+			if(arr[i].username != username && arr[i].nickname == nickname){
+				res.send("yes");
+				return;
+			}
+		}
+		res.send("no");
+	});
+});
 
 app.listen(3000);
