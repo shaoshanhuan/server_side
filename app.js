@@ -158,5 +158,42 @@ app.post("/cutavatarandsetavatar",(req,res)=>{
 	});
 });
 
+// 查询某人资料
+app.get("/profile/:username",(req,res)=>{
+	// 先看他有没有session
+	if(req.session.login == true){
+		// 查询数据库，查更多这个人的信息
+		fs.readFile("./db/users.txt",(err,content)=>{
+			var arr = JSON.parse(content.toString());
+			for(let i = 0 ; i < arr.length ; i++){
+				if(arr[i].username == req.params.username){
+					// 匹配了
+					// 返回结果
+					res.json({
+						"result" : 1,
+						"username" : arr[i].username,
+						"nickname" : arr[i].nickname,
+						"avatar" : arr[i].avatar,
+						"idcard" : arr[i].idcard,
+						"sex" : arr[i].sex,
+						"age" : arr[i].age,
+						"signature" : arr[i].signature,
+						"qq" : arr[i].qq,
+						"weixin" : arr[i].weixin,
+						"mobile" : arr[i].mobile
+					});
+					return;
+				}
+			}
+			// 没有找到这个人
+			res.json({
+				"result" : "-3"
+			});
+		});	
+	}else{
+		res.json({"err" : -4});
+	}
+});
+
 
 app.listen(3000);
