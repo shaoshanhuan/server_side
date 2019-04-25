@@ -235,4 +235,15 @@ app.get("/checknickname",(req,res)=>{
 	});
 });
 
+// 展示某id汽车的信息
+app.get("/car/:id", (req,res)=>{
+	const id = req.params.id;
+
+	// 读取数据库
+	fs.readFile("./db/cars.txt" , (err,content)=>{
+		var info = JSON.parse(content.toString()).filter(item => item.id == id)[0] || {};
+		res.json(info);
+	});
+});
+
 app.listen(3000);
