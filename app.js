@@ -246,4 +246,53 @@ app.get("/car/:id", (req,res)=>{
 	});
 });
 
+// 富查询接口
+app.get("/cars",(req,res)=>{
+	// 得到参数
+	var color = (url.parse(req.url, true).query.color || "").split("v");
+	var exhaust = (url.parse(req.url, true).query.exhaust || "").split("v");
+	var gearbox = (url.parse(req.url, true).query.gearbox || "").split("v");
+	var fuel = (url.parse(req.url, true).query.fuel || "").split("v");
+	var price = (url.parse(req.url, true).query.price || "").split("to");
+	var km = (url.parse(req.url, true).query.km || "").split("to");
+	var buydate = (url.parse(req.url, true).query.buydate || "").split("to");
+	var page = Number(url.parse(req.url, true).query.page) || 1;
+	var pagesize = Number(url.parse(req.url, true).query.pagesize) || 10;
+ 
+	// 读取数据库
+	fs.readFile("./db/cars.txt" , (err,content)=>{
+		// 全部数据
+		var resultArr = JSON.parse(content.toString());
+
+		// 过筛选器，下面的都是复选逻辑
+		if(color[0] != ""){
+			resultArr = resultArr.filter(item => color.includes(item.color));
+		}
+		if(exhaust[0] != ""){
+			resultArr = resultArr.filter(item => exhaust.includes(item.exhaust));
+		}
+		if(gearbox[0] != ""){
+			resultArr = resultArr.filter(item => gearbox.includes(item.gearbox));
+		}
+		if(fuel[0] != ""){
+			resultArr = resultArr.filter(item => fuel.includes(item.fuel));
+		}
+		// 范围区间的逻辑
+		if(price[0] != ""){
+			resultArr = resultArr.filter(item => item.price >= price[0] && item.price <= price[1]);
+		}
+		if(km[0] != ""){
+			resultArr = resultArr.filter(item => item.km >= km[0] && item.km <= km[1]);
+		}
+		if(buydate[0] != ""){
+			resultArr = resultArr.filter(item => item.buydate >= buydate[0] && item.buydate <= buydate[1]);
+		}
+
+		res.json({
+			total : resultArr.length,
+			result : resultArr.slice((page - 1) * pagesize , page * pagesize)
+		});
+	});
+});
+
 app.listen(3000);
